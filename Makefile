@@ -4,7 +4,7 @@ run:
 
 consul-up:
 	@echo "=============running a temporary consul============="
-	docker run -d --name=c1 -p 8500:8500 consul agent -dev -client=0.0.0.0 -bind=0.0.0.0
+	docker run --rm -d --name=c1 -p 8500:8500 consul agent -dev -client=0.0.0.0 -bind=0.0.0.0
 
 consul-down:
 	@echo "=============stopping the temporary consul============="

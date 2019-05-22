@@ -1,8 +1,12 @@
 package service
 
 import (
+	"fmt"
+	"log"
+	"strconv"
 	"time"
 
+	"github.com/LIYINGZHEN/go-consul-example/configs"
 	"github.com/go-redis/redis"
 	consul "github.com/hashicorp/consul/api"
 )
@@ -27,23 +31,32 @@ func New(addrs []string, ttl time.Duration) (*Service, error) {
 		return nil, err
 	}
 
-	c, err := consul.NewClient(consul.DefaultConfig())
+	config := consul.DefaultConfig()
+	c, err := consul.NewClient(config)
 	if err != nil {
 		return nil, err
 	}
 	s.ConsulAgent = c.Agent()
 
-	serviceDef := &consul.AgentServiceRegistration{
-		Name: s.Name,
-		Check: &consul.AgentServiceCheck{
-			TTL: s.TTL.String(),
-		},
+	address := configs.C.Server.Host
+	port, err := strconv.Atoi(configs.C.Server.Port)
+	if err != nil {
+		log.Fatalln(err)
 	}
 
+	serviceDef := &consul.AgentServiceRegistration{
+		Name:    s.Name,
+		Address: configs.C.Server.Host,
+		Port:    port,
+		Check: &consul.AgentServiceCheck{
+			HTTP:     fmt.Sprintf("http://%s:%v/healthcheck", address, port),
+			Interval: configs.C.Consul.Interval,
+			Timeout:  configs.C.Consul.Timeout,
+		},
+	}
 	if err := s.ConsulAgent.ServiceRegister(serviceDef); err != nil {
 		return nil, err
 	}
-	go s.UpdateTTL(s.Check)
 
 	return s, nil
 }

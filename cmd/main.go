@@ -1,31 +1,28 @@
 package main
 
 import (
-	"flag"
-	"fmt"
 	"log"
-	"net/http"
 	"strings"
 	"time"
 
-	"github.com/LIYINGZHEN/go-consul-example/internal/service"
+	"github.com/LIYINGZHEN/go-consul-example/configs"
+	"github.com/LIYINGZHEN/go-consul-example/internal/app/http"
+	"github.com/LIYINGZHEN/go-consul-example/internal/app/service"
 )
 
 func main() {
-	port := flag.Int("port", 8080, "Port to listen on")
-	addrsStr := flag.String("addrs", "localhost:6379", "Redis addrs")
-	ttl := flag.Duration("ttl", time.Second*15, "Service TTL check duration")
-	flag.Parse()
+	c := configs.C
 
-	addrs := strings.Split(*addrsStr, ";")
+	addrs := strings.Split(c.Redis.Addrs, ";")
+	ttl := time.Second * c.Server.TTL
 
-	s, err := service.New(addrs, *ttl)
+	s, err := service.New(addrs, ttl)
 	if err != nil {
 		log.Fatal(err)
 	}
-	http.Handle("/", s)
 
-	l := fmt.Sprintf(":%d", *port)
-	log.Print("Listening on ", l)
-	log.Fatal(http.ListenAndServe(l, nil))
+	server := http.AppServer{
+		Service: s,
+	}
+	server.Run(c.Server.Port)
 }

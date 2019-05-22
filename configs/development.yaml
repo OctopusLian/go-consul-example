@@ -1,0 +1,12 @@
+server:
+  host: "localhost"
+  url: http://localhost:8080
+  port: 8080
+  TTL: 15
+
+redis:
+  addrs: "localhost:6379"
+
+consul:
+  interval: "5s"
+  Timeout: "3s"
